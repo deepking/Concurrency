@@ -3,6 +3,7 @@ package server;
 import helper.NioOption;
 
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -96,10 +97,12 @@ public class BroadcastServer
         protected Object encode(ChannelHandlerContext ctx, Channel channel,
                 Object msg) throws Exception
         {
-            if (!(msg instanceof byte[]))
+            if (!(msg instanceof String))
                 return null;
             
-            byte[] bytes = (byte[]) msg;
+            String strMsg = (String) msg;
+            byte[] bytes = strMsg.getBytes(StandardCharsets.UTF_8);
+            
             ChannelBuffer buf = ChannelBuffers.buffer(4 + bytes.length);
             buf.writeInt(bytes.length);
             buf.writeBytes(bytes);
