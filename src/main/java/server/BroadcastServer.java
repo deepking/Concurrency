@@ -88,11 +88,9 @@ public class BroadcastServer
 	//------------------------------------------------------------------------
 	public static void main(String[] args)
     {
-	    Param param = new Param();
-	    new JCommander(param, args);
-	    
+	    int nPort = Integer.parseInt(args[0]);
 		final BroadcastServer server = new BroadcastServer();
-		server.run(param.port);
+		server.run(nPort);
 		
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		service.scheduleAtFixedRate(new Runnable()
@@ -113,7 +111,7 @@ public class BroadcastServer
 	
 	static class Param 
 	{
-	    @Parameter(names="port")
+	    @Parameter(names="-port")
 	    private int port = 9999;
 	}
 }

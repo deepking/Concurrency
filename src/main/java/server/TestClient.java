@@ -95,10 +95,12 @@ public class TestClient
 	//------------------------------------------------------------------------
     public static void main(String[] args)
     {
-        Param param = new Param();
-        new JCommander(param, args);
+//        Param param = new Param();
+//        new JCommander(param, args);
+        String strIp = args[0];
+        int nPort = Integer.parseInt(args[1]);
         
-	    new TestClient("client1").run(HostAndPort.fromParts(param.ip, param.port));
+	    new TestClient("client1").run(HostAndPort.fromParts(strIp, nPort));
     }
     
     static class Param
