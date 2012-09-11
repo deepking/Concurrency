@@ -47,7 +47,7 @@ public class TestClient
 		{
 			public ChannelPipeline getPipeline() throws Exception
 			{
-				return Channels.pipeline(new DetectDelay(this.toString()));
+				return Channels.pipeline(new DetectDelay(m_strName));
 			}
 		});
 		

@@ -14,11 +14,6 @@
 					<target>1.7</target>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>com.jolira</groupId>
-				<artifactId>onejar-maven-plugin</artifactId>
-				<version>1.4.4</version>
-			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
