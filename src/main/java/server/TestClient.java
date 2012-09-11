@@ -18,7 +18,6 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.base.Strings;
 import com.google.common.net.HostAndPort;
@@ -29,10 +28,17 @@ public class TestClient
 	private static final ChannelFactory sm_channelFactory = new NioClientSocketChannelFactory();
 	
 	private final String m_strName;
+	private long m_lDelayMillis = 200;
 	
 	public TestClient(String strName)
 	{
 		m_strName = strName;
+	}
+	
+	public TestClient setDelayMillis(long lMillis)
+	{
+	    m_lDelayMillis = lMillis;
+	    return this;
 	}
 	
 	public void run(HostAndPort hp)
@@ -47,7 +53,7 @@ public class TestClient
 		{
 			public ChannelPipeline getPipeline() throws Exception
 			{
-				return Channels.pipeline(new DetectDelay(m_strName));
+				return Channels.pipeline(new DetectDelay(m_strName, m_lDelayMillis));
 			}
 		});
 		
@@ -64,10 +70,12 @@ public class TestClient
     static class DetectDelay extends SimpleChannelUpstreamHandler
     {
     	final String m_strName;
+    	final long m_lDelayMillis;
     	
-    	public DetectDelay(String strName)
+    	public DetectDelay(String strName, long lDelayMillis)
         {
     		m_strName = strName;
+    		m_lDelayMillis = lDelayMillis;
         }
     	
     	@Override
@@ -87,7 +95,7 @@ public class TestClient
     		
     		long lServer = Long.parseLong(new String(bytes));
     		
-    		if (lCurr - lServer > 100)
+    		if (lCurr - lServer > m_lDelayMillis)
     		{
     			log.error("{} delay {} millis", m_strName, lCurr - lServer);
     		}
