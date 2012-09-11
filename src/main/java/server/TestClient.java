@@ -117,10 +117,11 @@ public class TestClient
         String strIp = args[0];
         int nPort = Integer.parseInt(args[1]);
         int nClientCount = Integer.parseInt(args[2]);
+        int nDelayMillis = Integer.parseInt(args[3]);
         
         for (int i = 0; i < nClientCount; i++)
         {
-    	    new TestClient(Strings.padStart("" + i, 6, '-')).run(HostAndPort.fromParts(strIp, nPort));
+    	    new TestClient(Strings.padStart("" + i, 6, '-')).setDelayMillis(nDelayMillis).run(HostAndPort.fromParts(strIp, nPort));
         }
     }
     
