@@ -8,6 +8,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -18,11 +21,11 @@ import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.ChannelGroupFuture;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
 import org.jboss.netty.handler.codec.string.StringEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
@@ -35,6 +38,7 @@ public class BroadcastServer
 	
 	private final Recipients m_handler = new Recipients();
 	private final StringEncoder m_encoder = new StringEncoder(Charsets.UTF_8);
+	private final LengthFrameEncoder m_lenEncoder = new LengthFrameEncoder();
 	
 	public void run(int nPort)
 	{
@@ -44,7 +48,7 @@ public class BroadcastServer
 		bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
 			public ChannelPipeline getPipeline() throws Exception
 			{
-				return Channels.pipeline(m_encoder, m_handler);
+				return Channels.pipeline(m_lenEncoder, m_handler);
 			}
 		});
 		
@@ -82,6 +86,25 @@ public class BroadcastServer
         {
 		    log.debug("send msg to {} clients", m_recipients.size());
 	        return m_recipients.write(message);
+        }
+	}
+	
+	static class LengthFrameEncoder extends OneToOneEncoder
+	{
+
+        @Override
+        protected Object encode(ChannelHandlerContext ctx, Channel channel,
+                Object msg) throws Exception
+        {
+            if (!(msg instanceof byte[]))
+                return null;
+            
+            byte[] bytes = (byte[]) msg;
+            ChannelBuffer buf = ChannelBuffers.buffer(4 + bytes.length);
+            buf.writeInt(bytes.length);
+            buf.writeBytes(bytes);
+            
+            return buf;
         }
 	}
 	
