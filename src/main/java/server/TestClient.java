@@ -1,5 +1,7 @@
 package server;
 
+import helper.NioOption;
+
 import java.net.InetSocketAddress;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
@@ -53,12 +55,6 @@ public class TestClient
 	}
 	
 	//------------------------------------------------------------------------
-    public static void main(String[] args)
-    {
-	    new TestClient("client1").run(HostAndPort.fromParts("localhost", 9999));
-    }
-	
-	//------------------------------------------------------------------------
     static class DetectDelay extends SimpleChannelUpstreamHandler
     {
     	final String m_strName;
@@ -85,11 +81,17 @@ public class TestClient
     		
     		long lServer = Long.parseLong(new String(bytes));
     		
-    		if (lCurr - lServer > 0)
+    		if (lCurr - lServer > 100)
     		{
     			log.error("{} delay {} millis", m_strName, lCurr - lServer);
     		}
     	}
     }
-
+    
+	//------------------------------------------------------------------------
+    public static void main(String[] args)
+    {
+	    new TestClient("client1").run(HostAndPort.fromParts("localhost", 9999));
+    }
+    
 }
