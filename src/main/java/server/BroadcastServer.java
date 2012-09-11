@@ -46,6 +46,7 @@ public class BroadcastServer
 			}
 		});
 		
+	
 		
 		bootstrap.bind(new InetSocketAddress(nPort));
 		log.info("start server port={}", nPort);
