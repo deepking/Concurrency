@@ -17,6 +17,8 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
 import com.google.common.net.HostAndPort;
 
 public class TestClient
@@ -33,6 +35,8 @@ public class TestClient
 	
 	public void run(HostAndPort hp)
 	{
+	    log.info("connect {})", hp);
+	    
 		ClientBootstrap bootstrap = new ClientBootstrap();
 		bootstrap.setFactory(sm_channelFactory);
 		bootstrap.setOption(NioOption.reuseAddress.toString(), true);
@@ -91,7 +95,19 @@ public class TestClient
 	//------------------------------------------------------------------------
     public static void main(String[] args)
     {
-	    new TestClient("client1").run(HostAndPort.fromParts("localhost", 9999));
+        Param param = new Param();
+        new JCommander(param, args);
+        
+	    new TestClient("client1").run(HostAndPort.fromParts(param.ip, param.port));
+    }
+    
+    static class Param
+    {
+        @Parameter(names="-ip")
+        String ip = "localhost";
+        
+        @Parameter(names="-port")
+        int port = 9999;
     }
     
 }

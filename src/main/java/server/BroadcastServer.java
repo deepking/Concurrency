@@ -22,6 +22,8 @@ import org.jboss.netty.handler.codec.string.StringEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -86,8 +88,11 @@ public class BroadcastServer
 	//------------------------------------------------------------------------
 	public static void main(String[] args)
     {
+	    Param param = new Param();
+	    new JCommander(param, args);
+	    
 		final BroadcastServer server = new BroadcastServer();
-		server.run(9999);
+		server.run(param.port);
 		
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		service.scheduleAtFixedRate(new Runnable()
@@ -105,4 +110,10 @@ public class BroadcastServer
 		
 		Uninterruptibles.joinUninterruptibly(Thread.currentThread());
     }
+	
+	static class Param 
+	{
+	    @Parameter(names="port")
+	    private int port = 9999;
+	}
 }
