@@ -11,6 +11,7 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.google.common.base.Strings;
 import com.google.common.net.HostAndPort;
 
 public class TestClient
@@ -35,7 +37,7 @@ public class TestClient
 	
 	public void run(HostAndPort hp)
 	{
-	    log.info("connect {})", hp);
+	    log.info("{} connect {})", m_strName, hp);
 	    
 		ClientBootstrap bootstrap = new ClientBootstrap();
 		bootstrap.setFactory(sm_channelFactory);
@@ -90,6 +92,13 @@ public class TestClient
     			log.error("{} delay {} millis", m_strName, lCurr - lServer);
     		}
     	}
+    	
+    	@Override
+    	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
+    	        throws Exception
+    	{
+    	    log.error("{} exception", m_strName, e.getCause());
+    	}
     }
     
 	//------------------------------------------------------------------------
@@ -99,8 +108,12 @@ public class TestClient
 //        new JCommander(param, args);
         String strIp = args[0];
         int nPort = Integer.parseInt(args[1]);
+        int nClientCount = Integer.parseInt(args[2]);
         
-	    new TestClient("client1").run(HostAndPort.fromParts(strIp, nPort));
+        for (int i = 0; i < nClientCount; i++)
+        {
+    	    new TestClient(Strings.padStart("" + i, 6, '-')).run(HostAndPort.fromParts(strIp, nPort));
+        }
     }
     
     static class Param
