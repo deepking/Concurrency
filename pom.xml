@@ -4,15 +4,54 @@
 	<groupId>chengyi</groupId>
 	<artifactId>Concurrency</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<!--<properties> -->
+        <!--<maven-compiler-plugin-version>2.5.1</maven-compiler-plugin-version> -->
+	<!--</properties> -->
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.5.1</version>
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>
 				</configuration>
+			</plugin>
+			<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-jar-plugin</artifactId> 
+				<configuration> <archive> <manifest> <mainClass>server.BroadcastServer</mainClass> 
+				<mainClass>server.TestClient</mainClass> </manifest> </archive> </configuration> 
+				</plugin> -->
+			<plugin>
+				<groupId>com.jolira</groupId>
+				<artifactId>onejar-maven-plugin</artifactId>
+				<version>1.4.4</version>
+				<executions>
+					<execution>
+						<id>BroadcastServer</id>
+						<configuration>
+							<mainClass>server.BroadcastServer</mainClass>
+							<attachToBuild>true</attachToBuild>
+							<classifier>onejar</classifier>
+							<filename>server.jar</filename>
+						</configuration>
+						<goals>
+							<goal>one-jar</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>TestClient</id>
+						<configuration>
+							<mainClass>server.TestClient</mainClass>
+							<attachToBuild>true</attachToBuild>
+							<classifier>onejar</classifier>
+							<filename>client.jar</filename>
+						</configuration>
+						<goals>
+							<goal>one-jar</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

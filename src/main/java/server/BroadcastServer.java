@@ -17,6 +17,7 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.ChannelGroupFuture;
@@ -73,16 +74,22 @@ public class BroadcastServer
 		public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e)
 		        throws Exception
 		{
-			m_recipients.add(e.getChannel());
+		    synchronized (m_recipients)
+            {
+    			m_recipients.add(e.getChannel());
+            }
 		}
 		
 		@Override
 		public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
 		        throws Exception
 		{
-			m_recipients.remove(e.getChannel());
+		    synchronized (m_recipients)
+            {
+    			m_recipients.remove(e.getChannel());
+            }
 		}
-
+		
 		public ChannelGroupFuture write(Object message)
         {
 		    log.debug("send msg to {} clients", m_recipients.size());
