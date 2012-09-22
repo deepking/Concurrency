@@ -21,10 +21,14 @@ import org.jboss.netty.channel.group.ChannelGroupFuture;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.frame.LengthFieldPrepender;
+import org.jboss.netty.util.DefaultObjectSizeEstimator;
+import org.jboss.netty.util.ObjectSizeEstimator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.Uninterruptibles;
 
@@ -63,6 +67,7 @@ public class BroadcastServer
 	static class Recipients extends SimpleChannelUpstreamHandler
 	{
 		ChannelGroup m_recipients = new DefaultChannelGroup();
+		ObjectSizeEstimator estimator = new DefaultObjectSizeEstimator();
 		
 		@Override
 		public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e)
@@ -87,7 +92,9 @@ public class BroadcastServer
 		
 		public ChannelGroupFuture write(Object message)
         {
-		    log.debug("send msg to {} clients", m_recipients.size());
+		    log.debug("send {} bytes to {} clients", estimator.estimateSize(message), 
+		    		m_recipients.size());
+		    
 	        return m_recipients.write(message);
         }
 	}
@@ -95,9 +102,16 @@ public class BroadcastServer
 	//------------------------------------------------------------------------
 	public static void main(String[] args)
     {
-	    int nPort = Integer.parseInt(args[0]);
+	    //int nPort = Integer.parseInt(args[0]);
+	    Param param = new Param();
+	    JCommander jcommander = new JCommander(param);
+	    jcommander.setProgramName("server");
+	    jcommander.usage();
+	    jcommander.parse(args);
+	    
 		final BroadcastServer server = new BroadcastServer();
-		server.run(nPort);
+		server.run(param.port);
+		
 		
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		service.scheduleAtFixedRate(new Runnable()
@@ -106,11 +120,11 @@ public class BroadcastServer
 			{
 				ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
 				buf.writeLong(System.currentTimeMillis());
-				buf.writeBytes(sm_strDummy.getBytes());
+				buf.writeBytes(sm_strDummy.getBytes(Charsets.US_ASCII));
 				
 				server.write(buf);
 			}
-		}, 100, 100, TimeUnit.MILLISECONDS);
+		}, param.sendPeriodMillis, param.sendPeriodMillis, TimeUnit.MILLISECONDS);
 		
 		Uninterruptibles.joinUninterruptibly(Thread.currentThread());
     }
@@ -119,5 +133,8 @@ public class BroadcastServer
 	{
 	    @Parameter(names="-port")
 	    private int port = 9999;
+	    
+	    @Parameter(names="-sendPeriodMillis")
+	    private int sendPeriodMillis = 100;
 	}
 }
