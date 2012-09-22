@@ -6,7 +6,6 @@ import java.net.InetSocketAddress;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
@@ -17,7 +16,7 @@ import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.jboss.netty.handler.codec.frame.FrameDecoder;
+import org.jboss.netty.handler.codec.frame.LengthFieldBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +37,7 @@ public class TestClient
         m_strName = strName;
     }
 
+    // ------------------------------------------------------------------------
     public TestClient setDelayMillis(long lMillis)
     {
         m_lDelayMillis = lMillis;
@@ -56,7 +56,7 @@ public class TestClient
         {
             public ChannelPipeline getPipeline() throws Exception
             {
-                return Channels.pipeline(new LengthFrameDecoder(), new DetectDelay(m_strName,
+                return Channels.pipeline(new LengthFieldBasedFrameDecoder(1000, 0, 4, 0, 4), new DetectDelay(m_strName,
                         m_lDelayMillis));
             }
         });
@@ -94,11 +94,11 @@ public class TestClient
 
             ChannelBuffer buf = (ChannelBuffer) e.getMessage();
 
-            int nLen = buf.bytesBefore((byte) ' ');
-            byte[] bytes = new byte[nLen];
-            buf.readBytes(bytes);
+//            int nLen = buf.bytesBefore((byte) ' ');
+//            byte[] bytes = new byte[nLen];
+//            buf.readBytes(bytes);
 
-            long lServer = Long.parseLong(new String(bytes));
+            long lServer =  buf.readLong();//Long.parseLong(new String(bytes));
 
             if (lCurr - lServer > m_lDelayMillis)
             {
@@ -118,54 +118,6 @@ public class TestClient
                 throws Exception
         {
             log.info("{} closed", m_strName);
-        }
-    }
-
-    static class LengthFrameDecoder extends FrameDecoder
-    {
-        @Override
-        protected Object decode(ChannelHandlerContext ctx, Channel channel,
-                ChannelBuffer buf) throws Exception
-        {
-            // Make sure if the length field was received.
-            if (buf.readableBytes() < 4)
-            {
-                // The length field was not received yet - return null.
-                // This method will be invoked again when more packets are
-                // received and appended to the buffer.
-                return null;
-            }
-
-            // The length field is in the buffer.
-
-            // Mark the current buffer position before reading the length field
-            // because the whole frame might not be in the buffer yet.
-            // We will reset the buffer position to the marked position if
-            // there's not enough bytes in the buffer.
-            buf.markReaderIndex();
-
-            // Read the length field.
-            int length = buf.readInt();
-
-            // Make sure if there's enough bytes in the buffer.
-            if (buf.readableBytes() < length)
-            {
-                // The whole bytes were not received yet - return null.
-                // This method will be invoked again when more packets are
-                // received and appended to the buffer.
-
-                // Reset to the marked position to read the length field again
-                // next time.
-                buf.resetReaderIndex();
-
-                return null;
-            }
-
-            // There's enough bytes in the buffer. Read it.
-            ChannelBuffer frame = buf.readBytes(length);
-
-            // Successfully decoded a frame. Return the decoded frame.
-            return frame;
         }
     }
 
