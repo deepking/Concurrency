@@ -24,127 +24,108 @@ import com.beust.jcommander.Parameter;
 import com.google.common.base.Strings;
 import com.google.common.net.HostAndPort;
 
-public class TestClient
-{
-    private static final Logger log = LoggerFactory.getLogger(TestClient.class);
-    private static final ChannelFactory sm_channelFactory = new NioClientSocketChannelFactory();
+public class TestClient {
+	private static final Logger log = LoggerFactory.getLogger(TestClient.class);
+	private static final ChannelFactory sm_channelFactory = new NioClientSocketChannelFactory();
 
-    private final String m_strName;
-    private long m_lDelayMillis = 200;
+	private final String m_strName;
+	private long m_lDelayMillis = 200;
 
-    public TestClient(String strName)
-    {
-        m_strName = strName;
-    }
+	public TestClient(String strName) {
+		m_strName = strName;
+	}
 
-    // ------------------------------------------------------------------------
-    public TestClient setDelayMillis(long lMillis)
-    {
-        m_lDelayMillis = lMillis;
-        return this;
-    }
+	// ------------------------------------------------------------------------
+	public TestClient setDelayMillis(long lMillis) {
+		m_lDelayMillis = lMillis;
+		return this;
+	}
 
-    public void run(HostAndPort hp)
-    {
-        log.info("{} connect {})", m_strName, hp);
+	public void run(HostAndPort hp) {
+		log.info("{} connect {})", m_strName, hp);
 
-        ClientBootstrap bootstrap = new ClientBootstrap();
-        bootstrap.setFactory(sm_channelFactory);
-        bootstrap.setOption(NioOption.reuseAddress.toString(), true);
-        bootstrap.setOption(NioOption.tcpNoDelay.toString(), true);
-        bootstrap.setPipelineFactory(new ChannelPipelineFactory()
-        {
-            public ChannelPipeline getPipeline() throws Exception
-            {
-                return Channels.pipeline(new LengthFieldBasedFrameDecoder(1000, 0, 4, 0, 4), new DetectDelay(m_strName,
-                        m_lDelayMillis));
-            }
-        });
+		ClientBootstrap bootstrap = new ClientBootstrap();
+		bootstrap.setFactory(sm_channelFactory);
+		bootstrap.setOption(NioOption.reuseAddress.toString(), true);
+		bootstrap.setOption(NioOption.tcpNoDelay.toString(), true);
+		bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+			public ChannelPipeline getPipeline() throws Exception {
+				return Channels
+						.pipeline(new LengthFieldBasedFrameDecoder(1000, 0, 4,
+								0, 4), new DetectDelay(m_strName,
+								m_lDelayMillis));
+			}
+		});
 
-        bootstrap
-                .connect(new InetSocketAddress(hp.getHostText(), hp.getPort()));
-    }
+		bootstrap
+				.connect(new InetSocketAddress(hp.getHostText(), hp.getPort()));
+	}
 
-    @Override
-    public String toString()
-    {
-        return m_strName;
-    }
+	@Override
+	public String toString() {
+		return m_strName;
+	}
 
-    // ------------------------------------------------------------------------
-    static class DetectDelay extends SimpleChannelUpstreamHandler
-    {
-        final String m_strName;
-        final long m_lDelayMillis;
+	// ------------------------------------------------------------------------
+	static class DetectDelay extends SimpleChannelUpstreamHandler {
+		final String m_strName;
+		final long m_lDelayMillis;
 
-        public DetectDelay(String strName, long lDelayMillis)
-        {
-            m_strName = strName;
-            m_lDelayMillis = lDelayMillis;
-        }
+		public DetectDelay(String strName, long lDelayMillis) {
+			m_strName = strName;
+			m_lDelayMillis = lDelayMillis;
+		}
 
-        @Override
-        public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
-                throws Exception
-        {
-            if (!(e.getMessage() instanceof ChannelBuffer))
-                return;
+		@Override
+		public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
+				throws Exception {
+			if (!(e.getMessage() instanceof ChannelBuffer))
+				return;
 
-            long lCurr = System.currentTimeMillis();
+			long lCurr = System.currentTimeMillis();
 
-            ChannelBuffer buf = (ChannelBuffer) e.getMessage();
+			ChannelBuffer buf = (ChannelBuffer) e.getMessage();
 
-//            int nLen = buf.bytesBefore((byte) ' ');
-//            byte[] bytes = new byte[nLen];
-//            buf.readBytes(bytes);
+			long lServer = buf.readLong();
+			if (lCurr - lServer > m_lDelayMillis) {
+				log.error("{} delay {} millis", m_strName, lCurr - lServer);
+			}
+		}
 
-            long lServer =  buf.readLong();//Long.parseLong(new String(bytes));
+		@Override
+		public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
+				throws Exception {
+			log.error("{} exception", m_strName, e.getCause());
+		}
 
-            if (lCurr - lServer > m_lDelayMillis)
-            {
-                log.error("{} delay {} millis", m_strName, lCurr - lServer);
-            }
-        }
+		@Override
+		public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
+				throws Exception {
+			log.info("{} closed", m_strName);
+		}
+	}
 
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
-                throws Exception
-        {
-            log.error("{} exception", m_strName, e.getCause());
-        }
-        
-        @Override
-        public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
-                throws Exception
-        {
-            log.info("{} closed", m_strName);
-        }
-    }
+	// ------------------------------------------------------------------------
+	public static void main(String[] args) {
+		// Param param = new Param();
+		// new JCommander(param, args);
+		String strIp = args[0];
+		int nPort = Integer.parseInt(args[1]);
+		int nClientCount = Integer.parseInt(args[2]);
+		int nDelayMillis = Integer.parseInt(args[3]);
 
-    // ------------------------------------------------------------------------
-    public static void main(String[] args)
-    {
-        // Param param = new Param();
-        // new JCommander(param, args);
-        String strIp = args[0];
-        int nPort = Integer.parseInt(args[1]);
-        int nClientCount = Integer.parseInt(args[2]);
-        int nDelayMillis = Integer.parseInt(args[3]);
+		for (int i = 0; i < nClientCount; i++) {
+			new TestClient(Strings.padStart("" + i, 6, '-')).setDelayMillis(
+					nDelayMillis).run(HostAndPort.fromParts(strIp, nPort));
+		}
+	}
 
-        for (int i = 0; i < nClientCount; i++)
-        {
-            new TestClient(Strings.padStart("" + i, 6, '-')).setDelayMillis(
-                    nDelayMillis).run(HostAndPort.fromParts(strIp, nPort));
-        }
-    }
+	static class Param {
+		@Parameter(names = "-ip")
+		String ip = "localhost";
 
-    static class Param
-    {
-        @Parameter(names = "-ip")
-        String ip = "localhost";
-
-        @Parameter(names = "-port")
-        int port = 9999;
-    }
+		@Parameter(names = "-port")
+		int port = 9999;
+	}
 
 }

@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -28,13 +29,10 @@ import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.google.common.base.Charsets;
-import com.google.common.base.Strings;
 import com.google.common.util.concurrent.Uninterruptibles;
 
 public class BroadcastServer
 {
-	private static final String sm_strDummy = Strings.repeat("helloworld", 10);
 	private static final Logger log = LoggerFactory.getLogger(BroadcastServer.class);
 	
 	// handler
@@ -54,8 +52,10 @@ public class BroadcastServer
 			}
 		});
 		
-		bootstrap.bind(new InetSocketAddress(nPort));
-		log.info("start server port={}", nPort);
+		System.out.println(bootstrap);
+		Channel channel = bootstrap.bind(new InetSocketAddress(nPort));
+		log.info("start server port={} channel={}", nPort, channel);
+		log.info("default thread={}", Runtime.getRuntime().availableProcessors() * 2);
 	}
 	
 	public ChannelGroupFuture write(Object message)
@@ -68,6 +68,13 @@ public class BroadcastServer
 	{
 		ChannelGroup m_recipients = new DefaultChannelGroup();
 		ObjectSizeEstimator estimator = new DefaultObjectSizeEstimator();
+		
+		@Override
+		public void channelInterestChanged(ChannelHandlerContext ctx,
+				ChannelStateEvent e) throws Exception {
+			
+			log.info("channel isWritable={} {}", ctx.getChannel().isWritable(), ctx.getChannel());
+		}
 		
 		@Override
 		public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e)
@@ -92,8 +99,8 @@ public class BroadcastServer
 		
 		public ChannelGroupFuture write(Object message)
         {
-		    log.debug("send {} bytes to {} clients", estimator.estimateSize(message), 
-		    		m_recipients.size());
+//		    log.debug("send {} bytes to {} clients", estimator.estimateSize(message), 
+//		    		m_recipients.size());
 		    
 	        return m_recipients.write(message);
         }
@@ -103,7 +110,7 @@ public class BroadcastServer
 	public static void main(String[] args)
     {
 	    //int nPort = Integer.parseInt(args[0]);
-	    Param param = new Param();
+	    final Param param = new Param();
 	    JCommander jcommander = new JCommander(param);
 	    jcommander.setProgramName("server");
 	    jcommander.usage();
@@ -112,15 +119,16 @@ public class BroadcastServer
 		final BroadcastServer server = new BroadcastServer();
 		server.run(param.port);
 		
+		final byte[] bytes = new byte[100];
 		
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		service.scheduleAtFixedRate(new Runnable()
 		{
 			public void run()
 			{
-				ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
+				ChannelBuffer buf = ChannelBuffers.buffer(8 + param.sendByteSize);
 				buf.writeLong(System.currentTimeMillis());
-				buf.writeBytes(sm_strDummy.getBytes(Charsets.US_ASCII));
+				buf.writeBytes(bytes);
 				
 				server.write(buf);
 			}
@@ -136,5 +144,8 @@ public class BroadcastServer
 	    
 	    @Parameter(names="-sendPeriodMillis")
 	    private int sendPeriodMillis = 100;
+	    
+	    @Parameter(names="-sendByteSize")
+	    private int sendByteSize = 100;
 	}
 }
