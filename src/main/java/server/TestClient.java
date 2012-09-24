@@ -70,6 +70,7 @@ public class TestClient {
 	static class DetectDelay extends SimpleChannelUpstreamHandler {
 		final String m_strName;
 		final long m_lDelayMillis;
+		long m_lLastDetectTimeMillis = System.currentTimeMillis();
 
 		public DetectDelay(String strName, long lDelayMillis) {
 			m_strName = strName;
@@ -83,6 +84,15 @@ public class TestClient {
 				return;
 
 			long lCurr = System.currentTimeMillis();
+			
+			if (lCurr - m_lLastDetectTimeMillis < 2L)
+			{
+			    return;
+			}
+			else
+			{
+			    m_lLastDetectTimeMillis = lCurr;
+			}
 
 			ChannelBuffer buf = (ChannelBuffer) e.getMessage();
 
