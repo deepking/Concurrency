@@ -143,7 +143,7 @@ public class BroadcastServer
 		final BroadcastServer server = new BroadcastServer();
 		server.run(param.port);
 		
-		final byte[] bytes = new byte[100];
+		final byte[] bytes = new byte[param.sendByteSize];
 		
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		service.scheduleAtFixedRate(new Runnable()
