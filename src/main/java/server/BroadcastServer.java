@@ -73,7 +73,7 @@ public class BroadcastServer
             public void operationComplete(ChannelGroupFuture future) throws Exception
             {
                 long lMillis = sw.elapsedMillis();
-                log.info("writeComplete {} ms, {}", lMillis, m_count.getAndIncrement());
+                log.debug("writeComplete {} ms, {}", lMillis, m_count.getAndIncrement());
             }
         });
 	    
