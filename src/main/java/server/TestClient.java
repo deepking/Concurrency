@@ -76,6 +76,13 @@ public class TestClient {
 			m_strName = strName;
 			m_lDelayMillis = lDelayMillis;
 		}
+		
+		@Override
+		public void channelInterestChanged(ChannelHandlerContext ctx,
+		        ChannelStateEvent e) throws Exception
+		{
+			log.info("channel State={} {}", e, ctx.getChannel());
+		}
 
 		@Override
 		public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)

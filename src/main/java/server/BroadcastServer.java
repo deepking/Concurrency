@@ -90,7 +90,7 @@ public class BroadcastServer
 		public void channelInterestChanged(ChannelHandlerContext ctx,
 				ChannelStateEvent e) throws Exception {
 			
-			log.info("channel isWritable={} {}", ctx.getChannel().isWritable(), ctx.getChannel());
+			log.info("channel State={} {}", e, ctx.getChannel());
 		}
 		
 		@Override
