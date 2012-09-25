@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -16,9 +17,11 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.ChannelGroupFuture;
+import org.jboss.netty.channel.group.ChannelGroupFutureListener;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.frame.LengthFieldPrepender;
@@ -29,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Uninterruptibles;
 
 public class BroadcastServer
@@ -39,6 +43,7 @@ public class BroadcastServer
 	//
 	private final Recipients m_handler = new Recipients();
 	private final LengthFieldPrepender m_lenPrePender = new LengthFieldPrepender(4);
+	private final AtomicInteger m_count = new AtomicInteger(1);
 	
 	public void run(int nPort)
 	{
@@ -60,7 +65,19 @@ public class BroadcastServer
 	
 	public ChannelGroupFuture write(Object message)
     {
-	    return m_handler.write(message);
+	    final Stopwatch sw = new Stopwatch().start();
+	    ChannelGroupFuture f = m_handler.write(message);
+	    f.addListener(new ChannelGroupFutureListener()
+        {
+            @Override
+            public void operationComplete(ChannelGroupFuture future) throws Exception
+            {
+                long lMillis = sw.elapsedMillis();
+                log.info("writeComplete {} ms, {}", lMillis, m_count.getAndIncrement());
+            }
+        });
+	    
+	    return f;
     }
 	
 	//------------------------------------------------------------------------
@@ -95,6 +112,13 @@ public class BroadcastServer
     			m_recipients.remove(e.getChannel());
             }
 		    log.debug("[Close] {}", e.getChannel());
+		}
+		
+		@Override
+		public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
+		        throws Exception
+		{
+		    log.warn("exception", e.getCause());
 		}
 		
 		public ChannelGroupFuture write(Object message)
@@ -147,5 +171,9 @@ public class BroadcastServer
 	    
 	    @Parameter(names="-sendByteSize")
 	    private int sendByteSize = 100;
+	    
+	    @Parameter(names="-sendBufSize")
+	    private int sendBufSize = 100;
+	    
 	}
 }
