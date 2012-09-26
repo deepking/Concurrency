@@ -105,7 +105,7 @@ public class BroadcastServer
                 ChannelStateEvent e) throws Exception
         {
 
-            log.info("channel State={} {}", e.getState(), ctx.getChannel());
+            log.info("channel State={}", ctx.getChannel().getInterestOps());
         }
 
         @Override
