@@ -92,7 +92,7 @@ public class TestClient {
 
 			long lCurr = System.currentTimeMillis();
 			
-			if (lCurr - m_lLastDetectTimeMillis < 2L)
+			if (lCurr - m_lLastDetectTimeMillis < 200L)
 			{
 			    return;
 			}
@@ -102,7 +102,6 @@ public class TestClient {
 			}
 
 			ChannelBuffer buf = (ChannelBuffer) e.getMessage();
-
 			long lServer = buf.readLong();
 			if (lCurr - lServer > m_lDelayMillis) {
 				log.error("{} delay {} millis", m_strName, lCurr - lServer);

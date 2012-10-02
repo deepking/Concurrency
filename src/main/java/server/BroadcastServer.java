@@ -171,10 +171,9 @@ public class BroadcastServer
                 {
                     public void run()
                     {
-                        ChannelBuffer buf = ChannelBuffers
-                                .buffer(8 + param.sendByteSize);
-                        buf.writeLong(System.currentTimeMillis());
-                        buf.writeBytes(bytes);
+                        ChannelBuffer len = ChannelBuffers.dynamicBuffer();
+                        len.writeLong(System.currentTimeMillis());
+                        ChannelBuffer buf = ChannelBuffers.wrappedBuffer(len.array(), bytes);
 
                         server.write(buf);
                     }
