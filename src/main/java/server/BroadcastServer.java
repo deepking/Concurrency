@@ -55,10 +55,11 @@ public class BroadcastServer
         m_factory = factory;
     }
 
-    public void run(int nPort)
+    public void run(Param param)
     {
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.setOption(NioOption.child_tcpNoDelay.toString(), true);
+        bootstrap.setOption(NioOption.reuseAddress.toString(), true);
         bootstrap.setFactory(m_factory);
         bootstrap.setPipelineFactory(new ChannelPipelineFactory()
         {
@@ -67,10 +68,17 @@ public class BroadcastServer
                 return Channels.pipeline(m_lenPrePender, m_handler);
             }
         });
+        bootstrap.setOption(NioOption.writeBufferHighWaterMark.toString(), param.writeBufferHighWaterMark);
+        bootstrap.setOption(NioOption.sendBufferSize.toString(), param.sendBufSize);
+        bootstrap.setOption("child.writeBufferHighWaterMark", param.writeBufferHighWaterMark);
+        bootstrap.setOption("child.writeBufferLowWaterMark", param.writeBufferHighWaterMark);
+        bootstrap.setOption("child.sendBufferSize", param.sendBufSize);
+        bootstrap.setOption("child.writeSpinCount", param.writeSpinCount);
 
-        System.out.println(bootstrap);
-        Channel channel = bootstrap.bind(new InetSocketAddress(nPort));
-        log.info("start server port={} channel={}", nPort, channel);
+System.out.println(bootstrap);
+
+        Channel channel = bootstrap.bind(new InetSocketAddress(param.port));
+        log.info("start server port={} channel={}", param.port, channel);
         log.info("default thread={}", Runtime.getRuntime()
                 .availableProcessors() * 2);
     }
@@ -160,7 +168,7 @@ public class BroadcastServer
                 new NioServerSocketChannelFactory(
                         Executors.newCachedThreadPool(),
                         Executors.newCachedThreadPool(), param.workerCount));
-        server.run(param.port);
+        server.run(param);
 
         final byte[] bytes = new byte[param.sendByteSize];
 
@@ -189,13 +197,31 @@ public class BroadcastServer
         private int port = 9999;
 
         @Parameter(names = "-sendPeriodMillis")
-        private int sendPeriodMillis = 100;
+        private int sendPeriodMillis = 25;
 
         @Parameter(names = "-sendByteSize")
-        private int sendByteSize = 100;
+        private int sendByteSize = 128;
 
         @Parameter(names = "-sendBufSize")
-        private int sendBufSize = 100;
+        private int sendBufSize = 4 * 1024;
+        
+        /**
+         * default 64 * 1024
+         */
+        @Parameter(names = "-writeBufferHighWaterMark")
+        private int writeBufferHighWaterMark = 64*1024;
+        
+        /**
+         * default 32 * 1024
+         */
+        @Parameter(names = "-writeBufferLowWaterMark")
+        private int writeBufferLowWaterMark = 32*1024;
+        
+        /**
+         * default 16
+         */
+        @Parameter(names = "-writeSpinCount")
+        private int writeSpinCount = 16;
 
         @Parameter(names = "-workerCount")
         private int workerCount = 32;
