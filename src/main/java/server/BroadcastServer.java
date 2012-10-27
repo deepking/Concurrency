@@ -183,7 +183,10 @@ System.out.println(bootstrap);
                         len.writeLong(System.currentTimeMillis());
                         ChannelBuffer buf = ChannelBuffers.wrappedBuffer(len.array(), bytes);
 
-                        server.write(buf);
+                        for (int i = 0; i < param.sendCountPerPeriod; i++)
+                        {
+                            server.write(buf);
+                        }
                     }
                 }, param.sendPeriodMillis, param.sendPeriodMillis,
                 TimeUnit.MILLISECONDS);
@@ -198,6 +201,9 @@ System.out.println(bootstrap);
 
         @Parameter(names = "-sendPeriodMillis")
         private int sendPeriodMillis = 25;
+        
+        @Parameter(names = "-sendCountPerPeriod")
+        private int sendCountPerPeriod = 40;
 
         @Parameter(names = "-sendByteSize")
         private int sendByteSize = 128;
