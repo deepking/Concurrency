@@ -192,7 +192,6 @@ System.out.println(bootstrap);
                 for (int i = 0; i < param.sendCountPerPeriod; i++)
                 {
                     server.write(buf);
-                    System.out.println("XXX");
                 }
                 
             }
