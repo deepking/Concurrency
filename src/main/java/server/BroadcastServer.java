@@ -69,10 +69,10 @@ public class BroadcastServer
             }
         });
         bootstrap.setOption(NioOption.writeBufferHighWaterMark.toString(), param.writeBufferHighWaterMark);
-        bootstrap.setOption(NioOption.sendBufferSize.toString(), param.sendBufSize);
+        //bootstrap.setOption(NioOption.sendBufferSize.toString(), param.sendBufSize);
         bootstrap.setOption("child.writeBufferHighWaterMark", param.writeBufferHighWaterMark);
         bootstrap.setOption("child.writeBufferLowWaterMark", param.writeBufferHighWaterMark);
-        bootstrap.setOption("child.sendBufferSize", param.sendBufSize);
+        //bootstrap.setOption("child.sendBufferSize", param.sendBufSize);
         bootstrap.setOption("child.writeSpinCount", param.writeSpinCount);
 
 System.out.println(bootstrap);
