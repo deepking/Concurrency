@@ -87,25 +87,25 @@ public class TestClient {
 		@Override
 		public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
 				throws Exception {
-			if (!(e.getMessage() instanceof ChannelBuffer))
-				return;
-
-			long lCurr = System.currentTimeMillis();
-			
-			if (lCurr - m_lLastDetectTimeMillis < 200L)
-			{
-			    return;
-			}
-			else
-			{
-			    m_lLastDetectTimeMillis = lCurr;
-			}
-
-			ChannelBuffer buf = (ChannelBuffer) e.getMessage();
-			long lServer = buf.readLong();
-			if (lCurr - lServer > m_lDelayMillis) {
-				log.error("{} delay {} millis", m_strName, lCurr - lServer);
-			}
+//			if (!(e.getMessage() instanceof ChannelBuffer))
+//				return;
+//
+//			long lCurr = System.currentTimeMillis();
+//			
+//			if (lCurr - m_lLastDetectTimeMillis < 200L)
+//			{
+//			    return;
+//			}
+//			else
+//			{
+//			    m_lLastDetectTimeMillis = lCurr;
+//			}
+//
+//			ChannelBuffer buf = (ChannelBuffer) e.getMessage();
+//			long lServer = buf.readLong();
+//			if (lCurr - lServer > m_lDelayMillis) {
+//				log.error("{} delay {} millis", m_strName, lCurr - lServer);
+//			}
 		}
 
 		@Override
