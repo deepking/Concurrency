@@ -26,6 +26,9 @@ import org.jboss.netty.channel.group.ChannelGroupFutureListener;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.frame.LengthFieldPrepender;
+import org.jboss.netty.logging.InternalLoggerFactory;
+import org.jboss.netty.logging.Log4JLoggerFactory;
+import org.jboss.netty.logging.Slf4JLoggerFactory;
 import org.jboss.netty.util.DefaultObjectSizeEstimator;
 import org.jboss.netty.util.ObjectSizeEstimator;
 import org.slf4j.Logger;
@@ -94,7 +97,7 @@ System.out.println(bootstrap);
                     throws Exception
             {
                 long lMillis = sw.elapsedMillis();
-                log.debug("writeComplete {} ms, {}", lMillis,
+                log.trace("writeComplete {} ms, {}", lMillis,
                         m_count.getAndIncrement());
             }
         });
@@ -157,6 +160,8 @@ System.out.println(bootstrap);
     // ------------------------------------------------------------------------
     public static void main(String[] args)
     {
+        InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory());
+        
         // int nPort = Integer.parseInt(args[0]);
         final Param param = new Param();
         JCommander jcommander = new JCommander(param);
