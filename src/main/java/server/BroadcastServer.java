@@ -1,10 +1,10 @@
 package server;
 
 import helper.NioOption;
+import helper.Scheduler;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -27,10 +27,12 @@ import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.frame.LengthFieldPrepender;
 import org.jboss.netty.logging.InternalLoggerFactory;
-import org.jboss.netty.logging.Log4JLoggerFactory;
 import org.jboss.netty.logging.Slf4JLoggerFactory;
 import org.jboss.netty.util.DefaultObjectSizeEstimator;
+import org.jboss.netty.util.HashedWheelTimer;
 import org.jboss.netty.util.ObjectSizeEstimator;
+import org.jboss.netty.util.Timeout;
+import org.jboss.netty.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,24 +179,24 @@ System.out.println(bootstrap);
 
         final byte[] bytes = new byte[param.sendByteSize];
 
-        ScheduledExecutorService service = Executors
-                .newSingleThreadScheduledExecutor();
-        service.scheduleAtFixedRate(
-                new Runnable()
-                {
-                    public void run()
-                    {
-                        ChannelBuffer len = ChannelBuffers.dynamicBuffer();
-                        len.writeLong(System.currentTimeMillis());
-                        ChannelBuffer buf = ChannelBuffers.wrappedBuffer(len.array(), bytes);
+        Scheduler scheduler = new Scheduler(new HashedWheelTimer());
+        scheduler.schedule(new TimerTask()
+        {
+            @Override
+            public void run(Timeout timeout) throws Exception
+            {
+                ChannelBuffer len = ChannelBuffers.dynamicBuffer();
+                len.writeLong(System.currentTimeMillis());
+                ChannelBuffer buf = ChannelBuffers.wrappedBuffer(len.array(), bytes);
 
-                        for (int i = 0; i < param.sendCountPerPeriod; i++)
-                        {
-                            server.write(buf);
-                        }
-                    }
-                }, param.sendPeriodMillis, param.sendPeriodMillis,
-                TimeUnit.MILLISECONDS);
+                for (int i = 0; i < param.sendCountPerPeriod; i++)
+                {
+                    server.write(buf);
+                    System.out.println("XXX");
+                }
+                
+            }
+        }, param.sendPeriodMillis, param.sendPeriodMillis, TimeUnit.MILLISECONDS);
 
         Uninterruptibles.joinUninterruptibly(Thread.currentThread());
     }
