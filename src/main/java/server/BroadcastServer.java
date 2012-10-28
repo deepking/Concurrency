@@ -77,7 +77,10 @@ public class BroadcastServer
         bootstrap.setOption(NioOption.child_tcpNoDelay.toString(), true);
         bootstrap.setOption("child.writeBufferHighWaterMark", param.writeBufferHighWaterMark);
         bootstrap.setOption("child.writeBufferLowWaterMark", param.writeBufferHighWaterMark);
-        bootstrap.setOption("child.sendBufferSize", param.sendBufSize);
+        if (param.sendBufSize > 0)
+        {
+            bootstrap.setOption("child.sendBufferSize", param.sendBufSize);
+        }
         bootstrap.setOption("child.writeSpinCount", param.writeSpinCount);
 
 System.out.println(bootstrap);
@@ -172,7 +175,7 @@ System.out.println(bootstrap);
 
         final byte[] bytes = new byte[param.sendByteSize];
 
-        Scheduler scheduler = new Scheduler(new HashedWheelTimer());
+        Scheduler scheduler = new Scheduler(new HashedWheelTimer(50, TimeUnit.MILLISECONDS));
         scheduler.schedule(new TimerTask()
         {
             @Override
@@ -208,7 +211,7 @@ System.out.println(bootstrap);
         private int sendByteSize = 128;
 
         @Parameter(names = "-sendBufSize")
-        private int sendBufSize = 4 * 1024;
+        private int sendBufSize = 0;
         
         /**
          * default 64 * 1024
