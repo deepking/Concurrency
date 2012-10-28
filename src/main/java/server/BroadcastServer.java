@@ -175,11 +175,11 @@ System.out.println(bootstrap);
 
         final byte[] bytes = new byte[param.sendByteSize];
 
-        Scheduler scheduler = new Scheduler(new HashedWheelTimer(50, TimeUnit.MILLISECONDS));
-        scheduler.schedule(new TimerTask()
+        Executors.newScheduledThreadPool(8).scheduleAtFixedRate(new Runnable()
         {
+            
             @Override
-            public void run(Timeout timeout) throws Exception
+            public void run()
             {
                 ChannelBuffer len = ChannelBuffers.dynamicBuffer();
                 len.writeLong(System.currentTimeMillis());
@@ -189,9 +189,26 @@ System.out.println(bootstrap);
                 {
                     server.write(buf);
                 }
-                
             }
         }, param.sendPeriodMillis, param.sendPeriodMillis, TimeUnit.MILLISECONDS);
+       
+//        Scheduler scheduler = new Scheduler(new HashedWheelTimer(50, TimeUnit.MILLISECONDS));
+//        scheduler.schedule(new TimerTask()
+//        {
+//            @Override
+//            public void run(Timeout timeout) throws Exception
+//            {
+//                ChannelBuffer len = ChannelBuffers.dynamicBuffer();
+//                len.writeLong(System.currentTimeMillis());
+//                ChannelBuffer buf = ChannelBuffers.wrappedBuffer(len.array(), bytes);
+//
+//                for (int i = 0; i < param.sendCountPerPeriod; i++)
+//                {
+//                    server.write(buf);
+//                }
+//                
+//            }
+//        }, param.sendPeriodMillis, param.sendPeriodMillis, TimeUnit.MILLISECONDS);
 
         Uninterruptibles.joinUninterruptibly(Thread.currentThread());
     }
