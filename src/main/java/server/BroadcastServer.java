@@ -63,8 +63,6 @@ public class BroadcastServer
     public void run(Param param)
     {
         ServerBootstrap bootstrap = new ServerBootstrap();
-        bootstrap.setOption(NioOption.child_tcpNoDelay.toString(), true);
-        bootstrap.setOption(NioOption.reuseAddress.toString(), true);
         bootstrap.setFactory(m_factory);
         bootstrap.setPipelineFactory(new ChannelPipelineFactory()
         {
@@ -73,11 +71,13 @@ public class BroadcastServer
                 return Channels.pipeline(m_lenPrePender, m_handler);
             }
         });
+        bootstrap.setOption(NioOption.reuseAddress.toString(), true);
         bootstrap.setOption(NioOption.writeBufferHighWaterMark.toString(), param.writeBufferHighWaterMark);
-        //bootstrap.setOption(NioOption.sendBufferSize.toString(), param.sendBufSize);
+        bootstrap.setOption(NioOption.sendBufferSize.toString(), param.sendBufSize);
+        bootstrap.setOption(NioOption.child_tcpNoDelay.toString(), true);
         bootstrap.setOption("child.writeBufferHighWaterMark", param.writeBufferHighWaterMark);
         bootstrap.setOption("child.writeBufferLowWaterMark", param.writeBufferHighWaterMark);
-        //bootstrap.setOption("child.sendBufferSize", param.sendBufSize);
+        bootstrap.setOption("child.sendBufferSize", param.sendBufSize);
         bootstrap.setOption("child.writeSpinCount", param.writeSpinCount);
 
 System.out.println(bootstrap);
@@ -90,19 +90,19 @@ System.out.println(bootstrap);
 
     public ChannelGroupFuture write(Object message)
     {
-        final Stopwatch sw = new Stopwatch().start();
         ChannelGroupFuture f = m_handler.write(message);
-        f.addListener(new ChannelGroupFutureListener()
-        {
-            @Override
-            public void operationComplete(ChannelGroupFuture future)
-                    throws Exception
-            {
-                long lMillis = sw.elapsedMillis();
-                log.trace("writeComplete {} ms, {}", lMillis,
-                        m_count.getAndIncrement());
-            }
-        });
+//        final Stopwatch sw = new Stopwatch().start();
+//        f.addListener(new ChannelGroupFutureListener()
+//        {
+//            @Override
+//            public void operationComplete(ChannelGroupFuture future)
+//                    throws Exception
+//            {
+//                long lMillis = sw.elapsedMillis();
+//                log.trace("writeComplete {} ms, {}", lMillis,
+//                        m_count.getAndIncrement());
+//            }
+//        });
 
         return f;
     }
@@ -125,20 +125,13 @@ System.out.println(bootstrap);
         public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e)
                 throws Exception
         {
-            synchronized (m_recipients)
-            {
-                m_recipients.add(e.getChannel());
-            }
+            m_recipients.add(e.getChannel());
         }
 
         @Override
         public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
                 throws Exception
         {
-            synchronized (m_recipients)
-            {
-                m_recipients.remove(e.getChannel());
-            }
             log.debug("[Close] {}", e.getChannel());
         }
 
