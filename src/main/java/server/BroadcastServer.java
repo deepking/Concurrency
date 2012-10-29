@@ -177,7 +177,6 @@ System.out.println(bootstrap);
 
         Executors.newScheduledThreadPool(8).scheduleAtFixedRate(new Runnable()
         {
-            
             @Override
             public void run()
             {
@@ -185,10 +184,12 @@ System.out.println(bootstrap);
                 len.writeLong(System.currentTimeMillis());
                 ChannelBuffer buf = ChannelBuffers.wrappedBuffer(len.array(), bytes);
 
+                Stopwatch sw = new Stopwatch().start();
                 for (int i = 0; i < param.sendCountPerPeriod; i++)
                 {
                     server.write(buf);
                 }
+                log.info("WriteComplete {}", sw.elapsedMillis());
             }
         }, param.sendPeriodMillis, param.sendPeriodMillis, TimeUnit.MILLISECONDS);
        
