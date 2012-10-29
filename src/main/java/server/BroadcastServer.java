@@ -94,18 +94,18 @@ System.out.println(bootstrap);
     public ChannelGroupFuture write(Object message)
     {
         ChannelGroupFuture f = m_handler.write(message);
-//        final Stopwatch sw = new Stopwatch().start();
-//        f.addListener(new ChannelGroupFutureListener()
-//        {
-//            @Override
-//            public void operationComplete(ChannelGroupFuture future)
-//                    throws Exception
-//            {
-//                long lMillis = sw.elapsedMillis();
-//                log.trace("writeComplete {} ms, {}", lMillis,
-//                        m_count.getAndIncrement());
-//            }
-//        });
+        final Stopwatch sw = new Stopwatch().start();
+        f.addListener(new ChannelGroupFutureListener()
+        {
+            @Override
+            public void operationComplete(ChannelGroupFuture future)
+                    throws Exception
+            {
+                long lMillis = sw.elapsedMillis();
+                log.trace("writeComplete {} ms, {}", lMillis,
+                        m_count.getAndIncrement());
+            }
+        });
 
         return f;
     }
@@ -184,12 +184,10 @@ System.out.println(bootstrap);
                 len.writeLong(System.currentTimeMillis());
                 ChannelBuffer buf = ChannelBuffers.wrappedBuffer(len.array(), bytes);
 
-                Stopwatch sw = new Stopwatch().start();
                 for (int i = 0; i < param.sendCountPerPeriod; i++)
                 {
                     server.write(buf);
                 }
-                log.info("WriteComplete {}", sw.elapsedMillis());
             }
         }, param.sendPeriodMillis, param.sendPeriodMillis, TimeUnit.MILLISECONDS);
        
