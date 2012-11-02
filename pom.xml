@@ -82,4 +82,8 @@
 			<version>1.29</version>
 		</dependency>
 	</dependencies>
+	<scm>
+		<url>https://github.com/deepking/Concurrency.git</url>
+		<developerConnection>chengyi</developerConnection>
+	</scm>
 </project>

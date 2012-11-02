@@ -1,7 +1,6 @@
 package server;
 
 import helper.NioOption;
-import helper.Scheduler;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
@@ -29,10 +28,7 @@ import org.jboss.netty.handler.codec.frame.LengthFieldPrepender;
 import org.jboss.netty.logging.InternalLoggerFactory;
 import org.jboss.netty.logging.Slf4JLoggerFactory;
 import org.jboss.netty.util.DefaultObjectSizeEstimator;
-import org.jboss.netty.util.HashedWheelTimer;
 import org.jboss.netty.util.ObjectSizeEstimator;
-import org.jboss.netty.util.Timeout;
-import org.jboss.netty.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -221,7 +217,7 @@ System.out.println(bootstrap);
         private int sendPeriodMillis = 25;
         
         @Parameter(names = "-sendCountPerPeriod")
-        private int sendCountPerPeriod = 40;
+        private int sendCountPerPeriod = 1;
 
         @Parameter(names = "-sendByteSize")
         private int sendByteSize = 128;
@@ -248,7 +244,7 @@ System.out.println(bootstrap);
         private int writeSpinCount = 16;
 
         @Parameter(names = "-workerCount")
-        private int workerCount = 32;
+        private int workerCount = Runtime.getRuntime().availableProcessors() * 2;
 
     }
 }
