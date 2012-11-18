@@ -4,16 +4,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.TimeUnit;
 
+import org.jboss.netty.util.HashedWheelTimer;
 import org.jboss.netty.util.Timeout;
 import org.jboss.netty.util.Timer;
 import org.jboss.netty.util.TimerTask;
+
+import com.google.common.util.concurrent.Uninterruptibles;
 
 public class Scheduler
 {
     private final Timer m_timer;
     
-    public Scheduler(Timer timer)
-    {
+    public Scheduler(Timer timer) {
         checkNotNull(timer, "null timer");
         m_timer = timer;
     }
@@ -112,4 +114,21 @@ public class Scheduler
             m_timeout.cancel();
         }
     }
+    
+    //-----------------------------------------------------------------------
+    public static void main(String[] args) {
+		Timer timer = new HashedWheelTimer();
+		Scheduler scheduler = new Scheduler(timer);
+		Timeout timeout = scheduler.scheduleOnce(new TimerTask() {
+			
+			@Override
+			public void run(Timeout timeout) throws Exception {
+				System.out.println("hello");
+			}
+		}, 6, TimeUnit.SECONDS);
+		
+		Uninterruptibles.sleepUninterruptibly(5, TimeUnit.SECONDS);
+		timeout.cancel();
+		Uninterruptibles.sleepUninterruptibly(5, TimeUnit.SECONDS);
+	}
 }
