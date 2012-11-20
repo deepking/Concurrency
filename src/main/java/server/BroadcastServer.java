@@ -3,6 +3,7 @@ package server;
 import helper.NioOption;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -161,16 +162,16 @@ public class BroadcastServer {
 						Executors.newCachedThreadPool(), param.workerCount));
 		server.run(param);
 
-		final ChannelBuffer bufContent = ChannelBuffers.directBuffer(param.sendByteSize);
-		Executors.newScheduledThreadPool(8).scheduleAtFixedRate(
+		final byte[] bytes = new byte[param.sendByteSize];
+		Arrays.fill(bytes, (byte) 30);
+		Executors.newScheduledThreadPool(32).scheduleAtFixedRate(
 				new Runnable() {
 					@Override
 					public void run() {
-						ChannelBuffer len = ChannelBuffers.buffer(8);
-						len.writeLong(System.currentTimeMillis());
-						ChannelBuffer buf = ChannelBuffers.wrappedBuffer(len, bufContent);
-
+//						ChannelBuffer len = ChannelBuffers.buffer(8);
+//						len.writeLong(System.currentTimeMillis());
 						for (int i = 0; i < param.sendCountPerPeriod; i++) {
+							ChannelBuffer buf = ChannelBuffers.wrappedBuffer(bytes);
 							server.write(buf);
 						}
 					}
@@ -185,13 +186,13 @@ public class BroadcastServer {
 		private int port = 9999;
 
 		@Parameter(names = "-sendPeriodMillis")
-		private int sendPeriodMillis = 25;
+		private int sendPeriodMillis = 1000;
 
 		@Parameter(names = "-sendCountPerPeriod")
-		private int sendCountPerPeriod = 40;
+		private int sendCountPerPeriod = 1;
 
 		@Parameter(names = "-sendByteSize")
-		private int sendByteSize = 128;
+		private int sendByteSize = 100;
 
 		@Parameter(names = "-sendBufSize")
 		private int sendBufSize = 0;
