@@ -27,7 +27,6 @@ import org.jboss.netty.channel.group.ChannelGroupFuture;
 import org.jboss.netty.channel.group.ChannelGroupFutureListener;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-import org.jboss.netty.handler.codec.frame.LengthFieldPrepender;
 import org.jboss.netty.logging.InternalLoggerFactory;
 import org.jboss.netty.logging.Slf4JLoggerFactory;
 import org.jboss.netty.util.DefaultObjectSizeEstimator;
@@ -47,8 +46,7 @@ public class BroadcastServer {
 	// handler
 	//
 	private final Recipients m_handler = new Recipients();
-	private final LengthFieldPrepender m_lenPrePender = new LengthFieldPrepender(
-			4);
+	//private final LengthFieldPrepender m_lenPrePender = new LengthFieldPrepender(4);
 	private final AtomicInteger m_count = new AtomicInteger(1);
 
 	private final ChannelFactory m_factory;
@@ -62,7 +60,7 @@ public class BroadcastServer {
 		bootstrap.setFactory(m_factory);
 		bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
 			public ChannelPipeline getPipeline() throws Exception {
-				return Channels.pipeline(m_lenPrePender, m_handler);
+				return Channels.pipeline(m_handler);
 			}
 		});
 		bootstrap.setOption(NioOption.reuseAddress.toString(), true);
@@ -91,15 +89,18 @@ public class BroadcastServer {
 	public ChannelGroupFuture write(Object message) {
 		ChannelGroupFuture f = m_handler.write(message);
 		final Stopwatch sw = new Stopwatch().start();
-		f.addListener(new ChannelGroupFutureListener() {
-			@Override
-			public void operationComplete(ChannelGroupFuture future)
-					throws Exception {
-				long lMillis = sw.elapsedMillis();
-				log.trace("writeComplete {} ms, {}", lMillis,
-						m_count.getAndIncrement());
-			}
-		});
+		if (log.isTraceEnabled())
+		{
+			f.addListener(new ChannelGroupFutureListener() {
+				@Override
+				public void operationComplete(ChannelGroupFuture future)
+						throws Exception {
+					long lMillis = sw.elapsedMillis();
+					log.trace("writeComplete {} ms, {}", lMillis,
+							m_count.getAndIncrement());
+				}
+			});
+		}
 
 		return f;
 	}
