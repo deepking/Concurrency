@@ -143,9 +143,9 @@ public class TestClient {
 		}
 		
 		while (true) {
-			Uninterruptibles.sleepUninterruptibly(10, TimeUnit.SECONDS);
+			Uninterruptibles.sleepUninterruptibly(param.tps, TimeUnit.SECONDS);
 			long lCount = count.getAndSet(0);
-			log.info("Throughput " + (lCount / 10.0));
+			log.info("Throughput " + (lCount / param.tps));
 		}
 	}
 
@@ -164,5 +164,8 @@ public class TestClient {
 
 		@Parameter(names = "-clientCount")
 		int clientCount = 1;
+		
+		@Parameter(names = "-tps")
+		int tps = 3;
 	}
 }
