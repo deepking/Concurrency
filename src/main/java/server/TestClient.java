@@ -145,7 +145,7 @@ public class TestClient {
 		while (true) {
 			Uninterruptibles.sleepUninterruptibly(10, TimeUnit.SECONDS);
 			long lCount = count.getAndSet(0);
-			log.info("Throughput " + lCount / 10);
+			log.info("Throughput " + (lCount / 10.0));
 		}
 	}
 

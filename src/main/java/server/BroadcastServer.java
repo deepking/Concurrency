@@ -88,9 +88,9 @@ public class BroadcastServer {
 
 	public ChannelGroupFuture write(Object message) {
 		ChannelGroupFuture f = m_handler.write(message);
-		final Stopwatch sw = new Stopwatch().start();
 		if (log.isTraceEnabled())
 		{
+			final Stopwatch sw = new Stopwatch().start();
 			f.addListener(new ChannelGroupFutureListener() {
 				@Override
 				public void operationComplete(ChannelGroupFuture future)
@@ -169,8 +169,6 @@ public class BroadcastServer {
 				new Runnable() {
 					@Override
 					public void run() {
-//						ChannelBuffer len = ChannelBuffers.buffer(8);
-//						len.writeLong(System.currentTimeMillis());
 						for (int i = 0; i < param.sendCountPerPeriod; i++) {
 							ChannelBuffer buf = ChannelBuffers.wrappedBuffer(bytes);
 							server.write(buf);
